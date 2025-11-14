@@ -1,102 +1,233 @@
-# md_plus_datathon_2025
-Flare Prediction from Chronic Illness Dataset
+# ICU Outcomes Prediction in Orthopedic Surgery Patients
 
-## Analysis Categories
+A machine learning framework for predicting composite long-term outcomes in ICU patients following orthopedic procedures (spine, hip, knee, shoulder/elbow, and hand surgeries).
 
-### Category 1: Preoperative Determinants of Intensive Care
-**Focus:** Cohort construction, feature engineering, univariate/multivariable analysis, predictive modeling for ICU admission
+## Overview
 
-- **verify_true_spine_cohort.py** - Validates spine surgery cohort definition and ensures exclusion of non-spine procedures (hip/knee), critical for proper cohort construction
-- **comprehensive_icu_analysis.py** - Implements the complete predictive modeling pipeline: feature engineering, train/test split, class weights, regularization, cross-validation, and model evaluation (Random Forest, Gradient Boosting, Logistic Regression)
-- **procedure_stratified_analysis.py** - Implements the procedure-type filtering approach described in your exclusion criteria, ensuring ≥10 patients per procedure category in both ICU/non-ICU groups to control for confounding
+This repository contains predictive models and statistical analyses to identify patient and procedural factors associated with poor outcomes in orthopedic surgery patients requiring intensive care unit (ICU) admission. The analysis uses clinical data including ICD procedure codes, CPT codes, comorbidities, and temporal outcomes to develop risk stratification tools.
 
-### Category 2: Long-Term Outcomes Analysis
-**Focus:** Longitudinal follow-up, mortality, readmissions, new diagnoses, discharge disposition, IPTW adjustment
+### Research Objectives
 
-- **icu_outcomes_analysis.py** - Assesses mortality, readmissions, and adverse outcomes using propensity score matching and IPTW adjustment methods described in your methods
-- **true_long_term_outcomes_analysis.py** - Analyzes unambiguous temporal outcomes at 30, 90, 180, and 365 days post-discharge including mortality and readmissions with proper follow-up time calculations
-- **extended_long_term_factors_analysis.py** - Identifies new diagnoses post-discharge, calculates multi-system organ involvement (Si), and implements composite measures (MAE, PO) as described in your methods
+- **Primary Goal**: Predict composite long-term outcomes for ICU patients after orthopedic surgery
+- **Secondary Goals**: 
+  - Identify preoperative risk factors for ICU admission
+  - Characterize post-surgical complications across clinical domains
+  - Assess long-term mortality, readmission, and functional outcomes
 
-### Category 3: Post-Surgical Complications
-**Focus:** 27 predefined complications across 7 clinical domains, ICD-based identification, complication rates and odds ratios
+### Key Features
 
-- **specific_complications_analysis.py** - Implements systematic evaluation of complications across cardiopulmonary, CNS, renal, electrolyte, GI, infectious, and surgical domains with ICD code and keyword matching as described
+- Multi-procedure orthopedic analysis (spine, hip, knee, shoulder/elbow, hand)
+- Composite outcome modeling (90-day mortality, 7-day readmission, extended LOS)
+- Machine learning models: Random Forest, Gradient Boosting, Logistic Regression
+- Feature importance analysis using SHAP values
+- Temporal outcome tracking (30, 90, 180, 365 days post-discharge)
+- Propensity score matching and inverse probability of treatment weighting (IPTW)
 
-### Category 4: Prognostic Factors in ICU Patients
-**Focus:** Analysis restricted to ICU patients, predictors of good vs poor outcomes within ICU cohort
+## Quick Start
 
-- **icu_prognostic_factors_analysis.py** - Restricts analysis to the 104 ICU patients, implements composite poor outcome definition, performs univariate and multivariable logistic regression with standardized predictors
+### Prerequisites
 
-### Support/Infrastructure Files
-*(Not part of core methods but essential for analysis)*
+```bash
+# Python 3.8+
+pip install pandas numpy matplotlib seaborn scikit-learn scipy
+pip install shap  # Optional, for feature importance visualization
+```
 
-- **verify_setup.py** - Environment and data validation
-- **paper_analysis_figures.py** - Publication-quality figure generation
-- **create_patient_data_visual.py** - Data structure visualization
-- **examine_patient_examples.py** - Individual patient data verification
+### Installation
+
+```bash
+git clone https://github.com/yourusername/md_plus_datathon_2025.git
+cd md_plus_datathon_2025
+```
+
+### Basic Usage
+
+Run the main analysis script:
+
+```bash
+python 04_icu_ortho_all_procedures_analysis.py
+```
+
+This will:
+1. Load and preprocess patient data
+2. Engineer features from clinical variables
+3. Train predictive models on ICU patients
+4. Generate evaluation metrics and visualizations
+5. Output results to `analysis_output/` directory
+
+### Expected Outputs
+
+- **Trained models**: Random Forest, Gradient Boosting, Logistic Regression classifiers
+- **Performance metrics**: ROC curves, AUC scores, precision-recall curves, calibration plots
+- **Feature importance**: SHAP summary plots and individual feature contributions
+- **Statistical reports**: Classification metrics, confusion matrices, cross-validation scores
+
+## Project Structure
+
+```
+md_plus_datathon_2025/
+│
+├── 04_icu_ortho_all_procedures_analysis.py  # Main analysis pipeline
+├── stats/                                    # Legacy statistical analyses (archived)
+├── README.md                                 # This file
+└── analysis_output/                          # Generated results (created at runtime)
+    ├── figures/                              # Visualizations
+    ├── models/                               # Saved model objects
+    └── reports/                              # Statistical summaries
+```
+
+## Methodology
+
+### Cohort Definition
+
+**Inclusion Criteria:**
+- Patients ≥18 years who underwent orthopedic surgery (ICD procedure codes + CPT codes)
+- Procedures: spine, hip, knee, shoulder/elbow, hand
+- Required ICU admission during index hospitalization
+
+**Exclusion Criteria:**
+- Non-surgical orthopedic encounters (diagnostic/observation only)
+- Missing critical outcome data (discharge status, mortality, readmission)
+
+### Composite Outcome Definition
+
+**Poor Outcome** (any of the following):
+- Mortality within 90 days of discharge
+- Hospital readmission within 7 days of discharge
+- Index hospitalization length of stay >7 days
+
+**Good Outcome**: Survived ≥90 days AND no 7-day readmission AND LOS ≤7 days
+
+### Feature Engineering
+
+**Demographic Features:**
+- Age at surgery, sex, race, insurance type
+
+**Clinical Features:**
+- Comorbidity burden (total diagnosis count)
+- Specific comorbidities: cardiac disease, hypertension, diabetes, pulmonary disease, renal disease, obesity
+- Procedure type and anatomical location
+- Emergency vs. elective admission
+
+**Temporal Features:**
+- Length of stay (hospital and ICU)
+- Time to readmission
+- Follow-up duration
+
+### Statistical Methods
+
+- **Univariate Analysis**: Chi-square tests, t-tests, Mann-Whitney U tests
+- **Multivariable Models**: Logistic regression with L2 regularization
+- **Machine Learning**: Random Forest, Gradient Boosting with hyperparameter tuning
+- **Model Evaluation**: AUC-ROC, precision-recall, calibration curves, cross-validation
+- **Feature Selection**: Variance inflation factor (VIF) for multicollinearity, SHAP for importance
+
+### Model Training
+
+```python
+# Stratified train/test split (80/20)
+# Class weight adjustment for imbalanced outcomes
+# 5-fold cross-validation for hyperparameter tuning
+# Sample weighting for robust predictions
+```
+
+## Results Interpretation
+
+### Model Performance Metrics
+
+- **AUC-ROC**: Discrimination ability (0.5 = random, 1.0 = perfect)
+- **Precision-Recall**: Performance on imbalanced datasets
+- **Calibration**: Agreement between predicted probabilities and observed outcomes
+- **Feature Importance**: Clinical variables driving predictions (via SHAP)
+
+### Clinical Significance
+
+High-risk patients identified by the model may benefit from:
+- Enhanced preoperative optimization
+- Extended perioperative monitoring
+- Early intervention protocols
+- Targeted discharge planning
+
+## Data Requirements
+
+The analysis expects CSV files with the following structure:
+
+**Patients** (`patients.csv`):
+- `patient_id`, `age`, `sex`, `race`
+
+**Admissions** (`admissions.csv`):
+- `admission_id`, `patient_id`, `admission_date`, `discharge_date`, `discharge_disposition`
+
+**Procedures** (`procedures.csv`):
+- `admission_id`, `icd_code`, `cpt_code`, `procedure_date`, `procedure_description`
+
+**Diagnoses** (`diagnoses.csv`):
+- `admission_id`, `icd_code`, `diagnosis_description`
+
+**ICU Stays** (`icu_stays.csv`):
+- `admission_id`, `icu_admit_date`, `icu_discharge_date`, `icu_los_days`
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit changes (`git commit -m 'Add your feature'`)
+4. Push to branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+## Citation
+
+If you use this code or methodology in your research, please cite:
+
+```bibtex
+@software{icu_ortho_prediction_2025,
+  author = {Your Name/Team},
+  title = {ICU Outcomes Prediction in Orthopedic Surgery Patients},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/yourusername/md_plus_datathon_2025}
+}
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contact
+
+For questions, issues, or collaboration inquiries:
+
+- **Primary Contact**: [Your Name] - your.email@institution.edu
+- **Institution**: [Your Institution]
+- **Research Group**: [Lab/Department Name]
+
+## Acknowledgments
+
+- Data source: [Hospital/Database Name]
+- Funding: [Grant Information, if applicable]
+- Computational resources: [Cluster/Cloud Platform, if applicable]
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue**: `ModuleNotFoundError: No module named 'shap'`  
+**Solution**: SHAP is optional. Install with `pip install shap` or the analysis will continue without SHAP visualizations.
+
+**Issue**: `FileNotFoundError: data/patients.csv not found`  
+**Solution**: Ensure data files are in the expected directory structure or update file paths in the script.
+
+**Issue**: Low model performance (AUC < 0.6)  
+**Solution**: Check for data quality issues, class imbalance, or insufficient sample size in the ICU cohort.
+
+## Version History
+
+- **v1.0.0** (2025-11-14): Initial release with composite outcome modeling
+- **v0.1.0** (2025-10-01): Development version with exploratory analyses
 
 ---
 
-## Section 1: Preoperative Determinants of Intensive Care
-
-**Navigation Flow:**  
-Begin with `verify_true_spine_cohort.py` to validate your cohort definition and ensure exclusion of non-spine procedures (hip/knee replacements). This script compares an "OLD" filter (lines 39-48) that incorrectly includes joint replacements against a "NEW" filter (lines 70-130) that uses both ICD body part characters and procedure title keywords to exclude non-spine surgeries.
-
-Next, critically, run `procedure_stratified_analysis.py` BEFORE `comprehensive_icu_analysis.py` to implement your methods' exclusion criteria. This file (lines 92-150) categorizes procedures into clinically meaningful groups, calculates representation scores (minimum of ICU and non-ICU counts), and filters to retain only procedures with ≥10 patients in both groups.
-
-Finally, execute `comprehensive_icu_analysis.py`, which implements the complete predictive modeling pipeline:
-- Feature engineering (Section 2, lines 120-250)
-- Train/test split with stratified sampling (Section 3, lines 250-350)
-- Class weight calculation and VIF multicollinearity checks (lines 400-450)
-- Logistic regression with L2 regularization and 5-fold cross-validation (Section 4, lines 450-600)
-- Model evaluation with AUC-ROC and calibration curves (Section 5, lines 600-750)
-
-
----
-
-## Section 2: Long-Term Outcomes Analysis
-
-**Navigation Flow:**  
-This section represents an iterative refinement process with five complementary analyses.
-
-1. **Start with `icu_outcomes_analysis.py`** (583 lines), which establishes the foundation by building the full cohort (ICU and non-ICU), identifying basic outcomes (mortality, readmissions, cardiac/pulmonary complications), and implementing propensity score matching with IPTW adjustment (Section 4, lines 300-450).
-
-2. **Then execute `true_long_term_outcomes_analysis.py`**, which shifts strategy entirely to avoid diagnosis timing ambiguity by focusing exclusively on unambiguous temporal outcomes with clear timestamps: hospital LOS, mortality at 30/90/180/365 days, and readmissions at multiple intervals (Section 2, lines 100-250).
-
-3. **Follow with `extended_long_term_factors_analysis.py`** to identify additional long-term factors:
-   - New chronic conditions developed post-discharge (comparing index vs. subsequent encounters, Section 4, lines 200-350)
-   - Multi-system organ involvement calculations (Si = count of affected organ systems, Section 5, lines 350-450)
-   - Composite adverse outcomes (MAE and PO definitions, Section 6, lines 450-550)
-
-
----
-
-## Section 3: Post-Surgical Complications
-
-**Navigation Flow:**  
-Execute `specific_complications_analysis.py` as a single comprehensive analysis. This 612-line script systematically evaluates 27 predefined complications organized into 7 clinical domains (Section 2, lines 60-150 defines the complication mappings).
-
-The code:
-- Loads diagnoses with ICD descriptions (lines 50-80)
-- Defines each complication using both ICD code prefixes (e.g., ICD-9 518.81/518.82/518.84 and ICD-10 J96 for respiratory failure) and keyword searches in the long_title field (Section 3, lines 150-250)
-- For each complication c, calculates rates per group (pc,g = Σ Cicg / Ng), odds ratios using the Woolf method with 95% CIs, and performs chi-square or Fisher's exact tests depending on expected cell counts (Section 4, lines 250-400)
-- Results are stratified by statistical significance (p < 0.001, p < 0.01, p < 0.05) and organized by clinical domain (cardiopulmonary, CNS, renal, etc.) in Section 5-6 (lines 400-550)
-- Generates comprehensive visualizations showing complication rates, odds ratios, risk differences, and domain-specific patterns
-
----
-
-## Section 4: Prognostic Factors in ICU Patients
-
-**Navigation Flow:**  
-Run `icu_prognostic_factors_analysis.py` as a standalone analysis restricted to the 104 ICU patients.
-
-The script:
-- Begins by loading the ICU cohort from `cohort_elective_spine_icu.csv` (lines 20-40) and merging with patient demographics, admissions data for discharge information, and diagnoses for comorbidities (Section 1, lines 40-100)
-- Section 2 (lines 100-200) defines the composite poor outcome (POi = 1 if any of: 90-day mortality, ≥2 readmissions in 1 year, facility discharge, ≥5 new diagnoses, or LOS > 75th percentile)
-- Baseline variables are extracted from the index hospitalization including age, sex, total diagnosis count, specific comorbidities, and ICU length of stay (Section 3, lines 200-280)
-- Continuous variables are standardized to z-scores (Xj* = (Xj - X̄j)/sj) in Section 4 (lines 280-320) to enable coefficient comparability
-- Section 5 (lines 320-450) performs univariate testing (t-tests for continuous, chi-square/Fisher's for categorical variables), followed by multivariable logistic regression with 9 baseline predictors:
-  
-  **logit(P(GoodOutcome)) = β0 + β1(Age) + β2(Sex) + β3(Diagnoses) + β4(Cardiac) + β5(Hypertension) + β6(Diabetes) + β7(Pulmonary) + β8(Renal) + β9(ICU_LOS)**
-
-- Adjusted odds ratios, 95% CIs, and AUC are calculated in Section 6 (lines 450-520), with visualizations showing outcome distributions, predictor effects, and model performance
+**Status**: Active Development  
+**Last Updated**: November 14, 2025
